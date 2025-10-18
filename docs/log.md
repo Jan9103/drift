@@ -36,7 +36,7 @@ use drift/prelude *
 
 def main [] {
   start_drift --log-targets [
-    (log output_target stdout)
+    (log output_target print)
     (log output_target file "./log.txt")
   ] {
     log info "foo"
@@ -46,7 +46,8 @@ def main [] {
 
 ### Built in targets
 
-* `stdout`: similar to `std/log`, just sends messages to `stdout`.
+* `print`: similar to `std/log`, just sends messages to `stdout`.
+  * `--stderr`: target stderr instead of stdout
   * `--format` (see `help format pattern`)
     * default: `$'{datetime} | {color}{level}:(ansi reset) {msg}'`
     * available: `level`, `msg`, `job_id`, `job_tag`, `time` (timestamp), `datetime`, `color`

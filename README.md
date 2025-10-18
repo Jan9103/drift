@@ -10,7 +10,7 @@ def main []: nothing -> nothing {
   start_drift --log-targets [
     # you can define as many log targets as you want
     # including custom targets like grafana-loki
-    (log output_target stdout)
+    (log output_target print)
     (log output_target file "./log.jsonl")
   ] {
     print (get_felt_temperature)

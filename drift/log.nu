@@ -1,5 +1,7 @@
 export module 'output_target' {
-  export def 'stdout' [
+  alias builtin_print = print
+  export def 'print' [
+    --stderr  # log to stderr instead of stdout
     --format: string = $'{datetime} | {color}{level}:(ansi reset) {msg}'
     --filter: closure  # everything where this returns true will be logged. default: {|log_entry| $log_entry.level in ['info', 'warn', 'error'] }
     --colors: record = {
@@ -15,7 +17,7 @@ export module 'output_target' {
     {
       'msg': {|log_entry|
         if (do $filter $log_entry) {
-          print (
+          builtin_print --stderr=$stderr (
             $log_entry
             | insert 'color' ($colors | get $log_entry.level)
             | insert 'datetime' ($log_entry.time | format date $datetime_format)
