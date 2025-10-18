@@ -1,0 +1,8 @@
+{
+  'name': 'drift',
+  'version': '0.0.0',
+  'description': 'A nushell scripting framework',
+  'maintainers': ['@jan9103'],
+  'license': 'https://github.com/jan9103/drift/blob/main/LICENSE',
+  'type': 'module',
+}
