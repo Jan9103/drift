@@ -28,7 +28,7 @@ You can create a panic using: `throw panic $title $body --id $id`
 
 ## Try
 
-```nu
+```nushell
 # catch by error type
 try {
   some_code
@@ -87,7 +87,7 @@ Within a `catch` block you can use `retry` to re-attempt the try-block.
 
 Example:
 
-```nu
+```nushell
 let result = (
   try {
     http get $url

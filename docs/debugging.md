@@ -7,7 +7,7 @@ cannot be changed mid-execution.
 
 To enable debug mode execute your script with a `nu` binary called `nu_drift_debug`.
 You can achieve this by (for example) symlinking it:
-```nu
+```nushell
 # linux:
 ^ln -s $nu.current-exe ($nu.home-path | path join '.local' 'bin' 'nu_drift_debug')
 ```

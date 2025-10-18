@@ -31,7 +31,7 @@ Drift can log to any number of targets.
 
 The targets get defined via `start_drift` argument:
 
-```nu
+```nushell
 use drift/prelude *
 
 def main [] {
@@ -67,7 +67,7 @@ def main [] {
 
 Example:
 
-```nu
+```nushell
 use drift/prelude *
 
 start_drift --log-targets [

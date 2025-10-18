@@ -2,7 +2,7 @@
 
 A Nushell Scripting-Framework.
 
-```nu
+```nushell
 use drift/prelude *
 
 def main []: nothing -> nothing {

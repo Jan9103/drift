@@ -18,7 +18,7 @@ Due to the way drift works it requires a "known environment", which gets set up 
 
 So your code should look like this:
 
-```nu
+```nushell
 use drift/prelude *
 
 def main [] {

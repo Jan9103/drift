@@ -6,7 +6,7 @@ import: `use drift/fs`
 
 A `mktemp` wrapper, which ensures the temp file / directory gets deleted at the end.
 
-```nu
+```nushell
 with mktemp -d {|tmpdir|
   cd $tmpdir
   http get $url | save 'foo.png'
@@ -16,13 +16,13 @@ with mktemp -d {|tmpdir|
 
 ## `list_pardirs`
 
-```nu
+```nushell
 ('/home/user' | list_pardirs) == ['/', '/home', '/home/user']
 ```
 
 ## `find_in_pardirs`
 
-```nu
+```nushell
 (pwd | find_in_pardirs '.git') == '/home/user/projects/drift'
 (pwd | find_in_pardirs 'foo') == null
 ```

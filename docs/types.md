@@ -48,7 +48,7 @@ structured data:
   * argument 1: content type
   * argument 2: length
   * example: `['array' ['string'] 3]` would match `["foo" "bar" "baz"]`
-* `tuple`: a list with a induvidual type definition for each entry
+* `tuple`: a list with a individual type definition for each entry
   * argument 1: list of content types
   * example: `['tuple' [['string'] ['int']]]` would match `['foo' 42]`
 * `record`
@@ -84,7 +84,7 @@ oddballs:
 basic usage: `$data | typecheck $type`
 
 example:
-```nu
+```nushell
 'foo' | typecheck ['string']
 
 ls | typecheck ['table' {
@@ -103,7 +103,7 @@ This can be used for repetitive structures or to allow recursion.
 
 example:
 
-```nu
+```nushell
 const COMMON_TYPES = {
   '$book': ['record' {
     'name': ['string']
