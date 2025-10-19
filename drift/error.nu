@@ -1,6 +1,73 @@
 use ./log.nu
+use ./globs.nu [is_in_debug_mode]
 
 export alias builtin_try = try
+
+# a placeholder to avoid LSP warnings while writing code
+@example '' {
+  def foo []: nothing -> string {
+    TODO implement foo
+  }
+}
+export def TODO [...args: oneof<string, int, float>]: any -> any {
+  throw panic $'Hit TODO marker: ($args | str join " ")' --id 'drift::TODO_marker'
+}
+
+# for making the LSP happy while also avoiding issues if you are wrong
+@example '' {
+  def my_func []: nothing -> string {
+    loop {
+      return ""
+    }
+    UNREACHABLE 'my_func'
+  }
+}
+export def UNREACHABLE [location: string, why_unreachable?: string]: nothing -> any {
+  throw panic $'Hit UNREACHABLE marker: ($location)' ($why_unreachable | default '[no explanation]') --id 'drift::UNREACHABLE_marker'
+}
+
+# error if a condition fails
+@example 'compare within assert' {
+  assert (1 + 1) '==' 2 -t 'Math just broke.' --panic
+  assert 10 '>' 0
+  assert 'Alice' '=~' '^[A-Z][a-z]+$'
+}
+@example 'pass a boolean to assert' {|foo|
+  assert true
+  assert $foo
+  assert (1 + 1 == 2)
+}
+export def assert [
+  lhs: any
+  comparison_operator?: string = '=='
+  rhs?: any = true
+
+  --error-title(-t): string = 'Assertion failed'
+  --error-id(-i): string = 'drift::assert'
+  --panic(-p)  # panic instead of error
+  --debug-only(-d)  # only check if debug is enabled
+]: nothing -> nothing {
+  if $debug_only and not $is_in_debug_mode { return }
+
+  let failed: bool = (match $comparison_operator {
+    '==' => { $lhs == $rhs }
+    '!=' => { $lhs != $rhs }
+    '>'  => { $lhs >  $rhs }
+    '>=' => { $lhs >= $rhs }
+    '<'  => { $lhs <  $rhs }
+    '<=' => { $lhs <= $rhs }
+    '=~' => { $lhs =~ $rhs }
+    '!~' => { $lhs !~ $rhs }
+    _ => { throw panic $'assert: invalid comparison_operator: ($comparison_operator)' --id 'drift::assert::invalid_comparison_operator' }
+  })
+  if $failed {
+    if $panic {
+      throw panic $error_title $'assertion: ($lhs | to nuon --raw --serialize) ($comparison_operator) ($rhs | to nuon --raw --serialize)' --id $error_id
+    } else {
+      throw error $error_title $'assertion: ($lhs | to nuon --raw --serialize) ($comparison_operator) ($rhs | to nuon --raw --serialize)' --id $error_id
+    }
+  }
+}
 
 @example 'basic' {|file|
   throw panic $"can't open file ($file)"

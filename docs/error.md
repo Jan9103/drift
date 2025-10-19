@@ -108,3 +108,32 @@ If no `--max-attempts` is provided it will retry forever.
 ## Rethrow
 
 `rethrow $drift_error`
+
+## Assert
+
+assert takes 3 positional arguments:
+1. left-hand-side
+2. comparison operator (`==`, `!=`, `>`, etc) as string
+3. right-hand-side
+
+but you can also just provide one - then it defaults to `== true`
+
+Flags:
+* `--error-title(-t): string`
+* `--error-id(-i): string`
+* `--panic(-p)` throw a panic instead of a error
+* `--debug-only(-d)` only run this in [debug mode](./debugging.md)
+
+## Markers
+
+The nu LSP requires you to always return the correct types - which can be quite annoying.
+
+Thus drift adds markers which "fix" all type errors:
+* `TODO`: for when something is not yet implemented
+  * all arguments get `str join " "` and added to the panic message
+* `UNREACHABLE`: for when a state should be unreachable
+  * arg1: location (required): where in the code is this
+  * arg2: note (optional): why is this unreachable
+
+They also provide you with some ease-of-mind that you will not end up with "default"
+values if something goes wrong.
