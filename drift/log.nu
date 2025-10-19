@@ -13,7 +13,7 @@ export module 'output_target' {
     }
     --datetime-format: string = '%c'  # see `format date --help`
   ] {
-    let filter = ($filter | default {|log_entry| $log_entry.level in ['info', 'warn', 'error'] })
+    let filter = ($filter | default {|| {|log_entry| $log_entry.level in ['info', 'warn', 'error'] } })
     {
       'msg': {|log_entry|
         if (do $filter $log_entry) {
@@ -36,7 +36,8 @@ export module 'output_target' {
     let file: path = ($file | path expand)
     {
       'msg': {|log_entry|
-        $log_entry | to json --raw
+        $log_entry
+        | update 'time' {|le| $le.time | format date '%s' | into int }
         | to json --raw
         | str trim
         | $"($in)\n"
@@ -69,7 +70,8 @@ export module 'output_target' {
 
     {
       'msg': {|log_entry|
-        $log_entry | to json --raw
+        $log_entry
+        | update 'time' {|le| $le.time | format date '%s' | into int }
         | to json --raw
         | str trim
         | $"($in)\n"
@@ -128,7 +130,7 @@ def write_log [
     'msg': $message
     'job_id': $jid
     'job_tag': (if $jid == 0 { '[main]' } else { job list | where $it.id == $jid | $in.tag?.0? | default '[no tag]' })
-    'time': (date now | format date '%s' | into int)
+    'time': (date now)
   }
   for target in ($env.DRIFT_LOG_TARGETS? | default []) {
     do $target.msg $msg

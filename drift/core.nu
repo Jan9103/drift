@@ -1,4 +1,4 @@
-use ./error.nu ['render error']
+use ./error.nu ['render raw_error']
 use ./log.nu
 
 export def 'start_drift' [
@@ -17,13 +17,7 @@ export def 'start_drift' [
   try {
     do $code
   } catch {|nu_error|
-    try {
-      let drift_error = ($nu_error.msg | from json)
-      if ($drift_error | columns | sort) != ["body","id","severity","title"] { 1 / 0 }
-      render error $drift_error
-    } catch {
-      $nu_error.rendered
-    }
+    render raw_error $nu_error
   } | print $in
   log info 'drift ended'
 }
