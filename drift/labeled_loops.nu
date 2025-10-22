@@ -39,7 +39,7 @@ export def l_each [
       $Out = ($Out | append (do $handler $item))
       null
     } catch {|err|
-      let de = ($err | convert_raw_error_to_drift_error)
+      let de = ($err | unpack_to_drift_error)
       if $de.severity == 'CF' and $de.id == $'@label:($label)' {
         $de.body | from nuon
       } else {

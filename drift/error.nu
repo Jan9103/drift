@@ -49,7 +49,7 @@ export def assert [
 ]: nothing -> nothing {
   if $debug_only and not $is_in_debug_mode { return }
 
-  let failed: bool = (match $comparison_operator {
+  let success: bool = (match $comparison_operator {
     '==' => { $lhs == $rhs }
     '!=' => { $lhs != $rhs }
     '>'  => { $lhs >  $rhs }
@@ -60,7 +60,7 @@ export def assert [
     '!~' => { $lhs !~ $rhs }
     _ => { throw panic $'assert: invalid comparison_operator: ($comparison_operator)' --id 'drift::assert::invalid_comparison_operator' }
   })
-  if $failed {
+  if not $success {
     if $panic {
       throw panic $error_title $'assertion: ($lhs | to nuon --raw --serialize) ($comparison_operator) ($rhs | to nuon --raw --serialize)' --id $error_id
     } else {
@@ -158,7 +158,7 @@ export def 'rethrow' [err] {
   make 'Tried to rethrow something without a nu error attached' $'Passed thing: ($err | to nuon --raw --serialize)' --id 'drift::error::missing_nu_error'
 }
 
-def unpack_to_drift_error []: record<msg: string, debug: string, raw: error, rendered: string, json: string> -> record {
+export def unpack_to_drift_error []: record<msg: string, debug: string, raw: error, rendered: string, json: string> -> record {
   let In = $in
   builtin_try {
     let r = $In.msg | from json
