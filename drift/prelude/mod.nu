@@ -7,3 +7,4 @@ export use ../error.nu *
 export use ../globs.nu [is_in_debug_mode]
 export use ../log.nu
 export use ../types.nu *
+export use ../labeled_loops.nu *

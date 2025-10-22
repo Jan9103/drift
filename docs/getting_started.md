@@ -43,5 +43,6 @@ You should read the chapters about things drift replaces:
 
 After that just read what you need / want:
 * [debugging](./debugging.md)
+* [labeled loops](./labeled_loops.md) (`break` or `continue` from within nested loops)
 * [logs](./log.md)
 * [typing](./types.md)
