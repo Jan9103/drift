@@ -59,3 +59,37 @@ export def l_each [
   }
   $Out
 }
+
+# runs a closure for each element and returns the first result that is not equal `null`.
+# essentially a more efficient version of `| each $handler | where $it != null | first`.
+export def l_map_find [
+  label: string
+  handler: closure
+]: list<any> -> oneof<any, nothing> {
+  let In = $in
+  for item in $in {
+    let r = (builtin_try {
+      let r = (do $handler $item)
+      if $r != null { return $r }
+      null
+    } catch {|err|
+      let de = ($err | unpack_to_drift_error)
+      if $de.severity == 'CF' and $de.id == $'@label:($label)' {
+        $de.body | from nuon
+      } else {
+        $err.raw
+      }
+    })
+    if $r == null {
+      continue
+    } else if $r.t == 'continue' {
+      if $r.value? != null { return $r.value }
+      continue
+    } else if $r == 'break' {
+      return null
+    } else {
+      throw panic $"l_each recieved unsupported CF: ($r | to nuon --raw --serialize)"
+    }
+  }
+  null
+}

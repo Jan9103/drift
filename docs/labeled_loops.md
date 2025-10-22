@@ -20,3 +20,15 @@ def foo [leach_item] {
 }
 # => [1 42]
 ```
+
+## `l_each`
+
+like each, but with support for `l_continue` and `l_break`
+
+## `l_map_find`
+
+apply `$handler` for each item and return the result if it is non-null.
+
+```nushell
+([null null 1 2 null] | l_map_find 'my_label' {|i| $i }) == 1
+```
