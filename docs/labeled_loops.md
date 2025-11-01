@@ -22,6 +22,12 @@ apply `$handler` for each item and return the result if it is non-null.
 ([null null 1 2 null] | l_map_find 'my_label' {|i| $i }) == 1
 ```
 
+### `l_peach`
+
+multi-threaded `l_each` (uses jobs under the hood).
+
+does not support `l_skip` for obvious reasons.
+
 ## in-loop commands
 
 ### `l_continue`
