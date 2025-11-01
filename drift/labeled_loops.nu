@@ -20,7 +20,21 @@ export def l_break [
   error make {
     'msg': ({
       'title': "you shouldn't see this - you probably used 'break' outside of a 'l_' function"
-      'body': "{'t':'break'}"
+      'body': '{"t":"break"}'
+      'severity': 'CF'
+      'id': $'@label:($label)'
+    } | to json --raw)
+  }
+  null
+}
+export def l_skip [
+  label: string
+  count: int  # 0 is equivalent to l_continue
+]: nothing -> nothing {
+  error make {
+    'msg': ({
+      'title': "you shouldn't see this - you probably used 'skip' outside of a 'l_' function"
+      'body': ({'t': 'skip', 'count': $count} | to json --raw)
       'severity': 'CF'
       'id': $'@label:($label)'
     } | to json --raw)
@@ -34,7 +48,12 @@ export def l_each [
 ]: list<any> -> list<any> {
   let In = $in
   mut Out = []
+  mut skip: int = 0
   for item in $In {
+    if $skip != 0 {
+      $skip -= 1
+      continue
+    }
     let r = (builtin_try {
       $Out = ($Out | append (do $handler $item))
       null
@@ -53,6 +72,9 @@ export def l_each [
       continue
     } else if $r == 'break' {
       break
+    } else if $r.t == 'skip' {
+      $skip = $r.count
+      continue
     } else {
       throw panic $"l_each recieved unsupported CF: ($r | to nuon --raw --serialize)"
     }
@@ -62,12 +84,18 @@ export def l_each [
 
 # runs a closure for each element and returns the first result that is not equal `null`.
 # essentially a more efficient version of `| each $handler | where $it != null | first`.
+# essentially <https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.find_map>
 export def l_map_find [
   label: string
   handler: closure
 ]: list<any> -> oneof<any, nothing> {
   let In = $in
+  mut skip: int = 0
   for item in $in {
+    if $skip != 0 {
+      $skip -= 1
+      continue
+    }
     let r = (builtin_try {
       let r = (do $handler $item)
       if $r != null { return $r }
@@ -87,6 +115,9 @@ export def l_map_find [
       continue
     } else if $r == 'break' {
       return null
+    } else if $r.t == 'skip' {
+      $skip = $r.count
+      continue
     } else {
       throw panic $"l_each recieved unsupported CF: ($r | to nuon --raw --serialize)"
     }
