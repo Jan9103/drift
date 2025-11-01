@@ -35,7 +35,8 @@ export def 'start_drift' [
   })
   if $res != null {
     let res = $res.0
-    if 'STRUCTURED_NU_OUTPUT_FILE' in $env and $env.STRUCTURED_NU_OUTPUT_FILE_TARGET == $env.PROCESS_PATH {
+    # for some reason this errors when done via `in` even tho the second statement should not run then..
+    if $env.STRUCTURED_NU_OUTPUT_FILE? != null and $env.STRUCTURED_NU_OUTPUT_FILE_TARGET? == $env.PROCESS_PATH? {
       $res | save $env.STRUCTURED_NU_OUTPUT_FILE
     } else {
       print $res
