@@ -63,6 +63,14 @@ def main [] {
     * default: `info`
 * `directory`: split the log into multiple files to make inspecting `log dump` easier (`jsonl`)
   * `directory` (path)
+* `loki`: [grafana loki](https://grafana.com/oss/loki)
+  * `use drift/log_targets/loki *; log_output_target_loki`
+  * `base_url` (string)
+    * default: `http://localhost:3102`
+  * `--tenant-id` (string): required to avoid random "unauthorized" errors
+  * `--log-dumps` (flag): send dumps as base64 into loki
+  * `--extra-labels` (record)
+    * example usage ideas: service-id, service-start-time, pid, hostname, script version, nu version, etc
 
 ### Custom target
 
