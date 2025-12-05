@@ -123,10 +123,12 @@ def 'convert_to_drift_error' []: record<msg: string, debug: string, raw: error, 
   }
 }
 
-@example 'basic' {|file|
+@example 'basic' {
+  let file = 'foo.txt'
   throw error $"can't open file ($file)"
 }
-@example 'hit ratelimit' {|url|
+@example 'hit ratelimit' {
+  let url = 'https://foo'
   throw error 'hit ratelimit' $'target: ($url)' --id 'http::503'
 }
 export def 'throw error' [
@@ -145,7 +147,7 @@ export def 'throw error' [
   null
 }
 
-@example 'with drift catch' {||
+@example 'with drift catch' {
   try {
     throw error 'test'
   } catch {|drift_error|
@@ -169,14 +171,14 @@ export def unpack_to_drift_error []: record<msg: string, debug: string, raw: err
   }
 }
 
-@example 'basic catch' {||
+@example 'basic catch' {
   try {
     throw error 'test error'
   } catch {|drift_error|
     # handling
   }
 }
-@example 'catch-record' {||
+@example 'catch-record' {
   try {
     throw error 'test error' --id 'example::test'
   } catch {
@@ -266,10 +268,10 @@ export def try [
   }
 }
 
-@example '' {|url|
+@example '' {
   let result = (
     try {
-      http get $url
+      http get 'https://127.0.0.1/foo.json'
     } catch {
       "http::503": {|drift_error|
         print 'Hit rate-limit. waiting 1sec before retrying.'

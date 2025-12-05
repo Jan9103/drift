@@ -106,7 +106,8 @@ export def error [message: string]: nothing -> nothing {
 
 # dump some data into log-files to make debugging easier.
 # this is intended to be used in ADDITION to a normal log message.
-@example 'dump http response' {|url|
+@example 'dump http response' {
+  let url = 'https://127.0.0.1/foo.json'
   let response = (http get --full --allow-errors $url)
   if $response.status != 200 {
     log error $'API fetch for ($url) failed'
