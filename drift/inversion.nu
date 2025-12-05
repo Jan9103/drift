@@ -35,13 +35,15 @@ def default_reversals []: nothing -> record { {
   'str2float': [[] {|| into float} {|| into string}]
 
   # subset
+  'columns': [[] {|| columns} {|original| zip ($original | values) | into record}]
   'drop': [['int'] {|count| drop $count} {|original,count| append ($original | last $count)}]
   'first': [['int'] {|count| first $count} {|original,count| append ($original | skip $count)}]
   'get': [['cell-path'] {|path| get $path } {|original,path| let In = $in; $original | update $path $In }]
   'last': [['int'] {|count| last $count} {|original,count| prepend ($original | drop $count)}]
-  'skip': [['int'] {|count| skip $count} {|original,count| prepend ($original | first $count)}]
-  'select': [['list'] {|cols| select ...$cols} {|original,cols| let In = $in; $original | merge $In}]
   'reject': [['list'] {|cols| reject ...$cols} {|original,cols| let In = $in; $original | merge $In}]
+  'select': [['list'] {|cols| select ...$cols} {|original,cols| let In = $in; $original | merge $In}]
+  'skip': [['int'] {|count| skip $count} {|original,count| prepend ($original | first $count)}]
+  'values': [[] {|| values} {|original| let In = $in; $original | columns | zip $In | into record}]
   'wrap': [['string'] {|column_name| wrap $column_name} {|original,column_name| get $column_name}]
 
   # other
@@ -49,21 +51,31 @@ def default_reversals []: nothing -> record { {
   'open': [['path'] {|file| open $file} {|original,file| $in | save --force $file}]  # $in is to force-collect it, to avoid bugs
   'reverse': [[] {|| reverse} {|| reverse}]
   'split column': [['string'] {|seperator| split column $seperator} {|original,seperator| str join $seperator}]
+  'lines': [[] {|| lines} {|| str join "\n"}]
 } }
 
 # uiua inspired function to auto un-apply a change.
 # support for each action has to be pre-defined.
 # in here as a experiment. there is a good chance that i will remove it.
 # also very basic implementation so far.
-@example '' {
-  ls | to json | under 'from json' { get name }
-  # equal to
-  ls | get name | to json
+@example 'change a file extension' {
+  './foo.png' | under 'path parse' { update $.extension 'jpg' }
+  # is equal to
+  './foo.png' | path parse | update $.extension 'jpg' | path join
 }
-@example '' {
-  ls | under 'get' $.name { str camel-case }
-  # equal to
-  ls | update name {|i| $i.name | str camel-case }
+@example 'send data to a external tool' {
+  ls | under 'to json' { ^jq '.[0]' }
+}
+@example 'Append to a file' {
+  under 'open' 'log.json' { append {'message': 'foo'} }
+
+  under 'open' $nu.config-path { under 'lines' { append 'source some_file.nu' } }
+}
+@example 'Do not apply something to the first 3 items of a list' {
+  ls | under 'skip' 3 { str camel-case $.name }
+}
+@example 'camelCase all the column names' {
+  ls | under 'columns' { str camel-case }
 }
 export def under [
   action: string
