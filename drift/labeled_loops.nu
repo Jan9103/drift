@@ -140,7 +140,7 @@ export def l_peach [
   mut idx: int = 0
   mut recieved: int = 0
   mut workers: table<job: int, working: bool, idx: int> = (
-    1..=$threads | each {
+    1..=$threads | each --keep-empty {
       {
         'job': (
           job spawn --tag 'drift::l_peach worker' {||
