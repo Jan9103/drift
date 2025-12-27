@@ -2,29 +2,17 @@
 
 Drift has its own error system on top of nu's error system.
 
-A Drift-Error looks like this:
+The error codes by drift itself can be found [here](./error_codes.md).
 
-```json5
-{
-  "id": "http::404",  // used for programatic recognition
-  "title": "Page not found",
-  "body": "url: https://example.com",
-  "severity": "error",
-  "nu_error": {}  // classic nu error - used by drift itself, you should ignore it
-}
-```
-
-The error codes by drift itself can be found [here](./error_codes.md)
-
-You can create a error using: `throw error $title $body --id $id`
+You can create a error using: `throw error $title $body --id $id`.
 
 ## Panics
 
-A panic is a error, which is not intended to be catched.
+A panic is a error, which is not intended to be caught.
 
-Internally the difference is that `"severity"` is `"panic"`.
+Internally the difference is that the `"code"` is prefixed with `"!"`.
 
-You can create a panic using: `throw panic $title $body --id $id`
+You can create a panic using: `throw panic $title $body --id $id`.
 
 ## Try
 
@@ -33,14 +21,14 @@ You can create a panic using: `throw panic $title $body --id $id`
 try {
   some_code
 } catch {
-  'http::404': {|drift_error|
+  'http::404': {|error|
     some_code
   }
-  'http::303': {|drift_error|
+  'http::303': {|error|
     some_code
   }
   # fallback (if not defined it will rethrow uncaught errors)
-  '_': {|drift_error|
+  '_': {|error|
     some_code
   }
 }
@@ -92,7 +80,7 @@ let result = (
   try {
     http get $url
   } catch {
-    "http::503": {|drift_error|
+    "http::503": {|error|
       print 'Hit rate-limit. waiting 1sec before retrying.'
       sleep 1sec
       retry --max-attempts 3

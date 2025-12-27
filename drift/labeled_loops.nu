@@ -5,12 +5,9 @@ export def l_continue [
   value?: any
 ]: nothing -> nothing {
   error make {
-    'msg': ({
-      'title': "you shouldn't see this - you probably used 'continue' outside of a 'l_' function"
-      'body': ({'t': 'continue', 'value': $value} | to nuon --raw)
-      'severity': 'CF'
-      'id': $'@label:($label)'
-    } | to json --raw)
+    'msg': "you shouldn't see this - you probably used 'continue' outside of a 'l_' function"
+    'help': ({'t': 'continue', 'value': $value} | to nuon --raw)
+    'code': $'^@label:($label)'
   }
   null
 }
@@ -18,12 +15,9 @@ export def l_break [
   label: string
 ]: nothing -> nothing {
   error make {
-    'msg': ({
-      'title': "you shouldn't see this - you probably used 'break' outside of a 'l_' function"
-      'body': '{"t":"break"}'
-      'severity': 'CF'
-      'id': $'@label:($label)'
-    } | to json --raw)
+    'msg': "you shouldn't see this - you probably used 'break' outside of a 'l_' function"
+    'help': '{"t":"break"}'
+    'id': $'^@label:($label)'
   }
   null
 }
@@ -32,12 +26,9 @@ export def l_skip [
   count: int  # 0 is equivalent to l_continue
 ]: nothing -> nothing {
   error make {
-    'msg': ({
-      'title': "you shouldn't see this - you probably used 'skip' outside of a 'l_' function"
-      'body': ({'t': 'skip', 'count': $count} | to json --raw)
-      'severity': 'CF'
-      'id': $'@label:($label)'
-    } | to json --raw)
+    'msg': "you shouldn't see this - you probably used 'skip' outside of a 'l_' function"
+    'help': ({'t': 'skip', 'count': $count} | to json --raw)
+    'id': $'^@label:($label)'
   }
   null
 }
@@ -59,9 +50,8 @@ export def l_each [
       $Out = ($Out | append (do $handler $item))
       null
     } catch {|err|
-      let de = ($err | unpack_to_drift_error)
-      if $de.severity == 'CF' and $de.id == $'@label:($label)' {
-        $de.body | from nuon
+      if $err.code == $'^@label:($label)' {
+        $err.help | from nuon
       } else {
         $err.raw
       }
@@ -102,9 +92,8 @@ export def l_map_find [
       if $r != null { return $r }
       null
     } catch {|err|
-      let de = ($err | unpack_to_drift_error)
-      if $de.severity == 'CF' and $de.id == $'@label:($label)' {
-        $de.body | from nuon
+      if $err.code == $'^@label:($label)' {
+        $err.help | from nuon
       } else {
         $err.raw
       }
@@ -187,9 +176,8 @@ export def l_peach [
       $Out = ($Out | update $res.idx $res.ok)
     } else {
       let err = $res.err
-      let de = ($err | unpack_to_drift_error)
-      if $de.severity == 'CF' and $de.id == $'@label:($label)' {
-        let r = ($de.body | from nuon)
+      if $err.code == $'^@label:($label)' {
+        let r = ($err.help | from nuon)
         if $r.t == 'continue' {
           $Out = ($Out | update $res.idx $r.value?)
           continue

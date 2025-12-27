@@ -18,18 +18,11 @@ export def 'start_drift' [
     $env.STRUCTURED_NU_OUTPUT_FILE = null
     do $code
     | if $in != null { [$in] }
-  } catch {|raw_error|
-    builtin_try {
-      let drift_error = ($raw_error.msg | from json)
-      if ($drift_error | columns | sort) != ["body","id","severity","title"] { 1 / 0 }
-      if $drift_error.severity == 'CF' and $drift_error.id == 'exit' {
-        [ ($drift_error.body | from nuon) ]
-      } else {
-        print -e (render drift_error $drift_error)
-        exit 1
-      }
-    } catch {
-      print -e $raw_error.rendered
+  } catch {|err|
+    if $err.code == '^drift::exit' {
+      [ ($err.help | from nuon) ]
+    } else {
+      print -e $err.rendered
       exit 1
     }
   })

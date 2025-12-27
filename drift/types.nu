@@ -6,7 +6,7 @@ def typecheck_error [
   got: any
   title: string
   panic: bool
-  error_id
+  error_id: string
 ]: nothing -> nothing {
   use ./error.nu
 

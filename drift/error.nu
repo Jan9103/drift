@@ -84,46 +84,14 @@ export def assert [
 export def 'throw panic' [
   title: string
   body: string = ""
-  --id(-i): string
+  --id(-i): string = ""
 ]: nothing -> nothing {
   error make {
-    'msg': ({
-      'title': $title
-      'body': $body
-      'severity': 'panic'
-      'id': $id
-    } | to json --raw)
+    msg: $title
+    help: $body
+    code: $"!($id)"
   }
   null
-}
-
-def 'convert_to_drift_error' []: record<msg: string, debug: string, raw: error, rendered: string, json: string> -> record {
-  let In = $in
-  let j = ($In.json | from json)
-  let id = (match $j.code {
-    null | '' => 'nu_error',
-    'nu::shell::network_failure' => {
-      let http_code = ($j.labels.0.text | parse -r '\((?P<a>\d\d\d)\)').0?.a?
-      if $http_code != null {
-        $'http::($http_code)'
-      } else { $j.code }
-    }
-    _ => $j.code
-  })
-  let r = {
-    'title': $j.msg
-    'body': $j.help
-    'severity': 'error'
-    'id': $id
-  }
-  builtin_try {
-    error make {
-      msg: ($r | to json --raw)
-      label: $j.labels.0?
-    }
-  } catch {|e|
-    $r | insert 'nu_error' $e
-  }
 }
 
 @example 'basic' {
@@ -137,15 +105,12 @@ def 'convert_to_drift_error' []: record<msg: string, debug: string, raw: error, 
 export def 'throw error' [
   title: string
   body: string = ""
-  --id(-i): string
+  --id(-i): string = ""
 ]: nothing -> nothing {
   error make {
-    'msg': ({
-      'title': $title
-      'body': $body
-      'severity': 'error'
-      'id': $id
-    } | to json --raw)
+    msg: $title
+    help: $body
+    code: $id
   }
   null
 }
@@ -153,31 +118,19 @@ export def 'throw error' [
 @example 'with drift catch' {
   try {
     throw error 'test'
-  } catch {|drift_error|
-    rethrow $drift_error
+  } catch {|error|
+    rethrow $error
   }
 }
-export def 'rethrow' [err] {
-  if 'nu_error' in $err { $err.nu_error.raw }  # drift error with nu error attached
-  if 'msg' in $err { $err.raw }  # normal nu error
-  make 'Tried to rethrow something without a nu error attached' $'Passed thing: ($err | to nuon --raw --serialize)' --id 'drift::error::missing_nu_error'
-}
-
-export def unpack_to_drift_error []: record<msg: string, debug: string, raw: error, rendered: string, json: string> -> record {
-  let In = $in
-  builtin_try {
-    let r = $In.msg | from json
-    if ($r | columns | sort) != ["body","id","severity","title"] { 1 / 0 }
-    $r | insert 'nu_error' $In
-  } catch {
-    $In | convert_to_drift_error
-  }
+export def 'rethrow' [err]: nothing -> nothing {
+  $err.raw
+  null
 }
 
 @example 'basic catch' {
   try {
     throw error 'test error'
-  } catch {|drift_error|
+  } catch {|error|
     # handling
   }
 }
@@ -185,11 +138,11 @@ export def unpack_to_drift_error []: record<msg: string, debug: string, raw: err
   try {
     throw error 'test error' --id 'example::test'
   } catch {
-    'example::test': {|drift_error|
+    'example::test': {|error|
       print 'You shall pass'
     }
-    '_': {|drift_error|
-      rethrow $drift_error
+    '_': {|error|
+      rethrow $error
     }
   }
 }
@@ -207,12 +160,10 @@ export def try [
     let res = (builtin_try {
       [ ($In | do $code) ]
     } catch {|err|
-      let error = ($err | unpack_to_drift_error)
-      if $error.severity == 'panic' and not $handle_panics {
+      if ($err.code | str starts-with '!') and not $handle_panics {
         if $finally != null {
           builtin_try { do $finally } catch {|f_err|
-            let f_error = ($f_err | unpack_to_drift_error)
-            if $f_error.type != 'panic' {
+            if not ($f_err.code | str starts-with '!') {
               log error $"[drift::error::try] 'try' panicked and 'finally' also produced a error - swallowing the 'finally' error: ($f_err.json)"
               $err.raw
             }
@@ -222,7 +173,7 @@ export def try [
         }
         $err.raw
       }
-      if $error.severity == 'CF' {
+      if ($err.code | str starts-with '^') {
         if $finally != null { do $finally }
         $err.raw
       }
@@ -230,7 +181,7 @@ export def try [
       let handler = (
         if ($eht | str starts-with "record") {
           $error_handling
-          | get --optional $error.id
+          | get --optional ($err.code | str trim --left --char '!')
           | default { $error_handling.'_'? }
         } else if ($eht | str starts-with 'closure') {
           $error_handling
@@ -238,14 +189,12 @@ export def try [
       )
       if $handler != null {
         builtin_try {
-          [ (do $handler $error) ]
+          [ (do $handler $err) ]
         } catch {|eh_err|
-          let eh_error = ($eh_err | unpack_to_drift_error)
-          if $eh_error.severity != 'CF' or $eh_error.id != 'drift::retry' {
+          if not ($eh_err.code | starts-with '^') or $eh_err.code != '^drift::retry' {
             if $finally != null {
               builtin_try { do $finally } catch {|f_err|
-                let f_error = ($f_err | unpack_to_drift_error)
-                if $eh_err.type == 'panic' and $f_error.type != 'panic' {
+                if ($eh_err.code | str starts-with '!') and not ($f_err.code | str starts-with '!') {
                   log error $"[drift::error::try] both 'catch' and 'finally' produced a error - swallowing the 'finally' error since the catch error is a panic: ($eh_err.json)"
                   $eh_err.raw
                 }
@@ -274,14 +223,14 @@ export def try [
 @example '' {
   let result = (
     try {
-      http get 'https://127.0.0.1/foo.json'
+      my_api get '/foo'
     } catch {
-      "http::503": {|drift_error|
+      "my_api::503": {|error|
         print 'Hit rate-limit. waiting 1sec before retrying.'
         sleep 1sec
         retry --max-attempts 3
         print 'failed 3 times, giving up.'
-        rethrow $drift_error
+        rethrow $error
       }
     }
   )
@@ -294,33 +243,8 @@ export def retry [
     return
   }
   error make {
-    'msg': ({
-      'title': "you shouldn't see this - you probably used 'retry' outside of a 'catch'"
-      'body': ""
-      'severity': 'CF'
-      'id': 'drift::retry'
-    } | to json --raw)
+    'msg': "you shouldn't see this - you probably used 'retry' outside of a 'catch'"
+    'code': '^drift::retry'
   }
   null
-}
-
-export def 'render raw_error' [
-  raw_error  # a error as generated by builtin_try
-]: nothing -> string {
-  builtin_try {
-    let drift_error = ($raw_error.msg | from json)
-    if ($drift_error | columns | sort) != ["body","id","severity","title"] { 1 / 0 }
-    render drift_error $drift_error
-  } catch {
-    $raw_error.rendered
-  }
-}
-
-export def 'render drift_error' [drift_error: record]: nothing -> string {
-  # since the "span" in the nu error is for the "error make" within "drift error make" i can't point anywhere :(
-  $"Drift-Error: (ansi red)($drift_error.id? | default '[no id]')(ansi reset)
-
-(ansi cyan)Title: (ansi reset)($drift_error.title | ansi strip)
-(ansi cyan)Body: (ansi reset)($drift_error.body? | default '[no body]' | ansi strip)
-(ansi cyan)Severity: (ansi reset)($drift_error.severity | ansi strip)"
 }
