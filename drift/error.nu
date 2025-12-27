@@ -32,8 +32,9 @@ export def UNREACHABLE [location: string, why_unreachable?: string]: nothing -> 
   assert 10 '>' 0
   assert 'Alice' '=~' '^[A-Z][a-z]+$'
 }
-@example 'pass a boolean to assert' {|foo|
+@example 'pass a boolean to assert' {
   assert true
+  let foo = true
   assert $foo
   assert (1 + 1 == 2)
 }
@@ -69,10 +70,12 @@ export def assert [
   }
 }
 
-@example 'basic' {|file|
+@example 'basic' {
+  let file = "/foo"
   throw panic $"can't open file ($file)"
 }
-@example 'hit ratelimit' {|bar|
+@example 'hit ratelimit' {
+  let bar = "/foo"
   (throw panic
     'invalid argument'
     $'function: foo, argument: bar, argument-value: ($bar)'

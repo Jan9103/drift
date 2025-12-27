@@ -100,10 +100,10 @@ def typecheck_error [
 #     '$author': ['record' {'name': ['string']}]
 #     '$book': ['record' {'title': ['string'], 'author': ['$author']}]
 #   }
-@example 'check if the input is a string' {||
+@example 'check if the input is a string' {
   "foo" | typecheck ['string']
 }
-@example "match 'ls'" {||
+@example "match 'ls'" {
   ls
   | typecheck ['table' {
     'name': ['string'],
@@ -112,7 +112,7 @@ def typecheck_error [
     'modified': ['datetime']
   }]
 }
-@example '(recursion) check that its only lists and ints' {||
+@example '(recursion) check that its only lists and ints' {
   [[1] [] 1 [[[1]]]]
   | typecheck ['$a'] --typedefs {
     '$a': ['oneof'

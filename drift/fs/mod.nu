@@ -1,8 +1,8 @@
 # a wrapper for `mktemp`, which ensures the file is deleted at the end
-@example '' {|url|
+@example '' {
   with mktemp -d {|tmpdir|
     cd $tmpdir
-    http get $url | save 'foo.png'
+    http get 'http://127.0.0.1' | save 'foo.png'
     ^image_viewer 'foo.png'
   }
 }
@@ -41,7 +41,7 @@ export def 'with mktemp' [
   }
 }
 
-@example '' {||
+@example '' {
   ('/home/user' | list_pardirs) == ['/', '/home', '/home/user']
 }
 export def list_pardirs []: path -> list<path> {
